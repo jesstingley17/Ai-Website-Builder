@@ -19,6 +19,7 @@ import { useParams } from 'next/navigation';
 import { api } from '@/convex/_generated/api';
 import { Loader2Icon, Download } from 'lucide-react';
 import JSZip from 'jszip';
+import { Tooltip } from '@/components/ui/tooltip';
 
 function CodeView() {
 
@@ -170,77 +171,101 @@ function CodeView() {
     };
 
     return (
-        <div className='relative'>
-            <div className='bg-[#181818] w-full p-2 border'>
-                <div className='flex items-center justify-between'>
-                    <div className='flex items-center flex-wrap shrink-0 bg-black p-1 justify-center
-                    w-[140px] gap-3 rounded-full'>
-                        <h2 onClick={() => setActiveTab('code')}
-                            className={`text-sm cursor-pointer 
-                        ${activeTab == 'code' && 'text-blue-500 bg-blue-500 bg-opacity-25 p-1 px-2 rounded-full'}`}>
-                            Code</h2>
-
-                        <h2 onClick={() => setActiveTab('preview')}
-                            className={`text-sm cursor-pointer 
-                        ${activeTab == 'preview' && 'text-blue-500 bg-blue-500 bg-opacity-25 p-1 px-2 rounded-full'}`}>
-                            Preview</h2>
+        <div className='relative h-[calc(100vh-5rem)] sm:h-[calc(100vh-6rem)] flex flex-col glass-dark rounded-2xl overflow-hidden animate-fade-in'>
+            <div className='bg-gray-900/80 w-full p-3 sm:p-4 border-b border-gray-800/50'>
+                <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4'>
+                    <div className='flex items-center gap-2 bg-gray-800/50 p-1 rounded-full border border-gray-700/50'>
+                        <Tooltip text="View and edit code" position="bottom">
+                            <button 
+                                onClick={() => setActiveTab('code')}
+                                className={`text-xs sm:text-sm cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-200 ${
+                                    activeTab == 'code' 
+                                        ? 'text-blue-400 bg-blue-500/20 border border-blue-500/30 shadow-sm' 
+                                        : 'text-gray-400 hover:text-gray-300'
+                                }`}
+                            >
+                                Code
+                            </button>
+                        </Tooltip>
+                        <Tooltip text="Preview your website" position="bottom">
+                            <button 
+                                onClick={() => setActiveTab('preview')}
+                                className={`text-xs sm:text-sm cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-200 ${
+                                    activeTab == 'preview' 
+                                        ? 'text-blue-400 bg-blue-500/20 border border-blue-500/30 shadow-sm' 
+                                        : 'text-gray-400 hover:text-gray-300'
+                                }`}
+                            >
+                                Preview
+                            </button>
+                        </Tooltip>
                     </div>
                     
                     {/* Download Button */}
-                    <button
-                        onClick={downloadFiles}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full transition-colors duration-200"
-                    >
-                        <Download className="h-4 w-4" />
-                        <span>Download Files</span>
-                    </button>
+                    <Tooltip text="Download all project files as ZIP" position="bottom">
+                        <button
+                            onClick={downloadFiles}
+                            className="btn-modern flex items-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl w-full sm:w-auto justify-center"
+                        >
+                            <Download className="h-4 w-4" />
+                            <span className="hidden sm:inline">Download Files</span>
+                            <span className="sm:hidden">Download</span>
+                        </button>
+                    </Tooltip>
                 </div>
             </div>
-            <SandpackProvider 
-            files={files}
-            template="react" 
-            theme={'dark'}
-            customSetup={{
-                dependencies: {
-                    ...Lookup.DEPENDANCY
-                },
-                entry: '/index.js'
-            }}
-            options={{
-                externalResources: ['https://cdn.tailwindcss.com'],
-                bundlerTimeoutSecs: 120,
-                recompileMode: "immediate",
-                recompileDelay: 300
-            }}
-            >
-                <div className="relative">
-                    <SandpackLayout>
-                        {activeTab=='code'?<>
-                            <SandpackFileExplorer style={{ height: '80vh' }} />
-                            <SandpackCodeEditor 
-                            style={{ height: '80vh' }}
-                            showTabs
-                            showLineNumbers
-                            showInlineErrors
-                            wrapContent />
-                        </>:
-                        <>
-                            <SandpackPreview 
-                                style={{ height: '80vh' }} 
-                                showNavigator={true}
-                                showOpenInCodeSandbox={false}
-                                showRefreshButton={true}
-                            />
-                        </>}
-                    </SandpackLayout>
-                </div>
-            </SandpackProvider>
+            <div className="flex-1 overflow-hidden">
+                <SandpackProvider 
+                    files={files}
+                    template="react" 
+                    theme={'dark'}
+                    customSetup={{
+                        dependencies: {
+                            ...Lookup.DEPENDANCY
+                        },
+                        entry: '/index.js'
+                    }}
+                    options={{
+                        externalResources: ['https://cdn.tailwindcss.com'],
+                        bundlerTimeoutSecs: 120,
+                        recompileMode: "immediate",
+                        recompileDelay: 300
+                    }}
+                >
+                    <div className="relative h-full">
+                        <SandpackLayout>
+                            {activeTab=='code'?<>
+                                <SandpackFileExplorer 
+                                    style={{ height: '100%', minHeight: '400px' }} 
+                                />
+                                <SandpackCodeEditor 
+                                    style={{ height: '100%', minHeight: '400px' }}
+                                    showTabs
+                                    showLineNumbers
+                                    showInlineErrors
+                                    wrapContent 
+                                />
+                            </>:
+                            <>
+                                <SandpackPreview 
+                                    style={{ height: '100%', minHeight: '400px' }} 
+                                    showNavigator={true}
+                                    showOpenInCodeSandbox={false}
+                                    showRefreshButton={true}
+                                />
+                            </>}
+                        </SandpackLayout>
+                    </div>
+                </SandpackProvider>
+            </div>
 
-            {loading&&<div className='p-10 bg-gray-900 opacity-80 absolute top-0 
-            rounded-lg w-full h-full flex items-center justify-center'>
-                <Loader2Icon className='animate-spin h-10 w-10 text-white'/>
-                <h2 className='text-white'> Generating files...</h2>
-            </div>}
+            {loading && (
+                <div className='absolute inset-0 bg-gray-900/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-4 z-50 animate-fade-in'>
+                    <Loader2Icon className='animate-spin h-12 w-12 sm:h-16 sm:w-16 text-blue-400'/>
+                    <h2 className='text-white text-lg sm:text-xl font-semibold'>Generating files...</h2>
+                    <p className='text-gray-400 text-sm sm:text-base'>This may take a moment</p>
+                </div>
+            )}
         </div>
     );
 }

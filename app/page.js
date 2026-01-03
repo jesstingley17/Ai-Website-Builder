@@ -1,10 +1,10 @@
 import Hero from "@/components/custom/Hero";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import Header from "@/components/custom/Header";
 
 export default function Home() {
   return (
-    <div> 
+    <div className="min-h-screen"> 
+      <Header />
       <Hero />
     </div>
   );

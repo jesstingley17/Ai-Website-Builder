@@ -8,6 +8,7 @@ import { api } from '@/convex/_generated/api';
 import { useRouter } from 'next/navigation';
 import VisionUpload from './VisionUpload';
 import StreamingChat from './StreamingChat';
+import { Tooltip } from '@/components/ui/tooltip';
 
 /**
  * Enhanced Hero Component
@@ -184,16 +185,18 @@ function EnhancedHero() {
                             {repoInfo && (
                                 <div className="flex items-center gap-2 text-sm text-green-400">
                                     <span>✓ Repository loaded: {repoInfo.repo?.name}</span>
-                                    <button
-                                        onClick={() => {
-                                            setRepoInfo(null);
-                                            setUseGithub(false);
-                                            setGithubRepo('');
-                                        }}
-                                        className="text-red-400 hover:text-red-300"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
+                                    <Tooltip text="Remove repository" position="top">
+                                        <button
+                                            onClick={() => {
+                                                setRepoInfo(null);
+                                                setUseGithub(false);
+                                                setGithubRepo('');
+                                            }}
+                                            className="text-red-400 hover:text-red-300"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </Tooltip>
                                 </div>
                             )}
                         </div>
