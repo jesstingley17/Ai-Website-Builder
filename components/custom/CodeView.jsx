@@ -73,21 +73,41 @@ function CodeView() {
 
     const GenerateAiCode=async()=>{
         setLoading(true);
-        const PROMPT=JSON.stringify(messages)+" "+Prompt.CODE_GEN_PROMPT;
-        const result=await axios.post('/api/gen-ai-code',{
-            prompt:PROMPT
-        });
-        
-        // Preprocess AI-generated files
-        const processedAiFiles = preprocessFiles(result.data?.files || {});
-        const mergedFiles = {...Lookup.DEFAULT_FILE, ...processedAiFiles};
-        setFiles(mergedFiles);
+        try {
+            const PROMPT=JSON.stringify(messages)+" "+Prompt.CODE_GEN_PROMPT;
+            const result=await axios.post('/api/gen-ai-code',{
+                prompt:PROMPT
+            });
+            
+            if (result.data?.error) {
+                console.error("API Error:", result.data.error);
+                alert(`Error generating code: ${result.data.error}${result.data.details ? '\n' + result.data.details : ''}`);
+                setLoading(false);
+                return;
+            }
 
-        await UpdateFiles({
-            workspaceId:id,
-            files:result.data?.files
-        });
-        setLoading(false);
+            if (!result.data?.files) {
+                console.error("No files in response:", result.data);
+                alert("Error: No files were generated. Please try again.");
+                setLoading(false);
+                return;
+            }
+            
+            // Preprocess AI-generated files
+            const processedAiFiles = preprocessFiles(result.data.files);
+            const mergedFiles = {...Lookup.DEFAULT_FILE, ...processedAiFiles};
+            setFiles(mergedFiles);
+
+            await UpdateFiles({
+                workspaceId:id,
+                files:result.data.files
+            });
+        } catch (error) {
+            console.error("Error generating code:", error);
+            alert(`Error generating code: ${error.message || 'An unexpected error occurred'}. Please check the console for details.`);
+        } finally {
+            setLoading(false);
+        }
     }
     
     const downloadFiles = async () => {
