@@ -88,9 +88,11 @@ function ChatView() {
                                 }`}>
                                     {msg.role === 'user' ? 'You' : 'AI'}
                                 </div>
-                                <ReactMarkdown className="prose prose-invert flex-1 overflow-auto">
-                                    {msg.content}
-                                </ReactMarkdown>
+                                <div className="flex-1 overflow-auto">
+                                    <ReactMarkdown className="text-gray-100 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&>ol]:list-decimal [&>ol]:ml-4 [&>li]:mb-1 [&>code]:bg-gray-700 [&>code]:px-1 [&>code]:py-0.5 [&>code]:rounded [&>code]:text-sm [&>pre]:bg-gray-800 [&>pre]:p-3 [&>pre]:rounded [&>pre]:overflow-x-auto [&>h1]:text-2xl [&>h2]:text-xl [&>h3]:text-lg [&>strong]:font-bold [&>a]:text-blue-400 [&>a]:underline">
+                                        {msg.content}
+                                    </ReactMarkdown>
+                                </div>
                             </div>
                         </div>
                     ))}
