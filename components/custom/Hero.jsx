@@ -1,7 +1,7 @@
 "use client"
 import Lookup from '@/data/Lookup';
 import { MessagesContext } from '@/context/MessagesContext';
-import { ArrowRight, Link, Sparkles, Send, Wand2, Loader2 } from 'lucide-react';
+import { ArrowRight, Link, Sparkles, Send, Wand2, Loader2, Github, X } from 'lucide-react';
 import React, { useContext, useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -9,15 +9,24 @@ import { useRouter } from 'next/navigation';
 
 function Hero() {
     const [userInput, setUserInput] = useState('');
+    const [githubRepo, setGithubRepo] = useState('');
+    const [useGithub, setUseGithub] = useState(false);
     const [isEnhancing, setIsEnhancing] = useState(false);
+    const [isLoadingRepo, setIsLoadingRepo] = useState(false);
+    const [repoInfo, setRepoInfo] = useState(null);
     const { messages, setMessages } = useContext(MessagesContext);
     const CreateWorkspace = useMutation(api.workspace.CreateWorkspace);
     const router = useRouter();
 
-    const onGenerate = async (input) => {
+    const onGenerate = async (input, githubContext = null) => {
+        let content = input;
+        if (githubContext) {
+            content = `Use this GitHub repository as a reference/base:\nRepository: ${githubContext.repo.url}\n\nRepository files context:\n${JSON.stringify(githubContext.files, null, 2)}\n\nUser request: ${input}`;
+        }
+        
         const msg = {
             role: 'user',
-            content: input
+            content: content
         }
         setMessages(msg);
         const workspaceID = await CreateWorkspace({
@@ -25,6 +34,49 @@ function Hero() {
         });
         router.push('/workspace/' + workspaceID);
     }
+
+    const fetchGithubRepo = async () => {
+        if (!githubRepo.trim()) return;
+        
+        setIsLoadingRepo(true);
+        try {
+            const response = await fetch('/api/github-repo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ repoUrl: githubRepo.trim() }),
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                alert(`Error: ${data.error}`);
+                return;
+            }
+
+            setRepoInfo(data);
+            setUseGithub(true);
+        } catch (error) {
+            console.error('Error fetching GitHub repo:', error);
+            alert('Failed to fetch repository. Please check the URL and try again.');
+        } finally {
+            setIsLoadingRepo(false);
+        }
+    };
+
+    const handleGenerate = async () => {
+        if (useGithub && repoInfo) {
+            await onGenerate(userInput, repoInfo);
+        } else {
+            await onGenerate(userInput);
+        }
+    };
+
+    const clearGithubRepo = () => {
+        setGithubRepo('');
+        setRepoInfo(null);
+        setUseGithub(false);
+    };
 
     const enhancePrompt = async () => {
         if (!userInput) return;
@@ -79,10 +131,72 @@ function Hero() {
                         </p>
                     </div>
 
+                    {/* GitHub Repository Section */}
+                    {useGithub && repoInfo && (
+                        <div className="w-full max-w-3xl bg-emerald-900/20 backdrop-blur-2xl rounded-xl border-2 border-emerald-500/40 p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Github className="h-5 w-5 text-emerald-400" />
+                                    <div>
+                                        <a 
+                                            href={repoInfo.repo.url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-emerald-400 hover:text-emerald-300 font-mono text-sm"
+                                        >
+                                            {repoInfo.repo.owner}/{repoInfo.repo.repo}
+                                        </a>
+                                        <p className="text-emerald-400/70 text-xs mt-1">
+                                            {repoInfo.fileCount} files loaded
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={clearGithubRepo}
+                                    className="text-emerald-400/70 hover:text-emerald-400 transition-colors"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Modified Input Section */}
                     <div className="w-full max-w-3xl bg-gray-900/40 backdrop-blur-2xl rounded-xl border-2 border-electric-blue-500/40 shadow-[0_0_40px_5px_rgba(59,130,246,0.15)]">
                         <div className="p-2 bg-gradient-to-r from-electric-blue-500/10 to-purple-500/10">
                             <div className="bg-gray-900/80 p-6 rounded-lg">
+                                {/* GitHub Repo Input */}
+                                <div className="mb-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Github className="h-4 w-4 text-electric-blue-400/70" />
+                                        <label className="text-sm text-electric-blue-400/70 font-mono">
+                                            Use GitHub Repository (optional)
+                                        </label>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="github.com/owner/repo or owner/repo"
+                                            value={githubRepo}
+                                            onChange={(e) => setGithubRepo(e.target.value)}
+                                            className="flex-1 bg-gray-800/50 border border-electric-blue-500/30 rounded-lg px-4 py-2 text-gray-100 placeholder-electric-blue-500/50 focus:border-electric-blue-500 focus:ring-0 outline-none font-mono text-sm transition-all"
+                                            onKeyPress={(e) => e.key === 'Enter' && fetchGithubRepo()}
+                                            disabled={isLoadingRepo || isEnhancing}
+                                        />
+                                        <button
+                                            onClick={fetchGithubRepo}
+                                            disabled={isLoadingRepo || !githubRepo.trim() || isEnhancing}
+                                            className={`px-4 py-2 bg-electric-blue-500/20 hover:bg-electric-blue-500/30 border border-electric-blue-500/40 rounded-lg transition-all ${isLoadingRepo || !githubRepo.trim() || isEnhancing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            {isLoadingRepo ? (
+                                                <Loader2 className="h-4 w-4 animate-spin text-electric-blue-400" />
+                                            ) : (
+                                                <Github className="h-4 w-4 text-electric-blue-400" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div className="flex gap-4">
                                     <textarea
                                         placeholder="DESCRIBE YOUR VISION..."
@@ -106,9 +220,9 @@ function Hero() {
                                                     )}
                                                 </button>
                                                 <button
-                                                    onClick={() => onGenerate(userInput)}
-                                                    disabled={isEnhancing}
-                                                    className={`flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl px-4 py-4 transition-all duration-200 ${isEnhancing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                                    onClick={handleGenerate}
+                                                    disabled={isEnhancing || isLoadingRepo}
+                                                    className={`flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl px-4 py-4 transition-all duration-200 ${isEnhancing || isLoadingRepo ? 'opacity-70 cursor-not-allowed' : ''}`}
                                                 >
                                                     <Send className="h-8 w-8" />
                                                 </button>

@@ -23,6 +23,13 @@ Ensure the project follows best practices in component organization and styling.
 - Use **lucide-react** icons if needed for UI enhancement.  
 - Do not create a src folder.
 
+**GitHub Repository Context (if provided):**
+- If a GitHub repository context is provided, use it as a reference or base for the code generation.
+- Analyze the repository structure, patterns, and code style from the provided files.
+- Adapt the code generation to match the repository's coding conventions and architecture.
+- Use the repository files as inspiration, but create new code based on the user's request.
+- If the repository contains relevant components or utilities, incorporate similar patterns into the generated code.
+
 **Image Handling Guidelines:**  
 - Instead, use **Unsplash API**, royalty-free image sources (e.g., Pexels, Pixabay).
 - Do not use images from unsplash.com.
